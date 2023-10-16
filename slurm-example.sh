@@ -9,7 +9,7 @@
 
 # set up job
 module load python cuda
-pushd /home/tianlix/EECS595
+pushd /home/tianlix/EECS595/EECS592_hw3
 source venv/bin/activate
 
 # run job
