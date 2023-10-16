@@ -17,7 +17,7 @@ def set_seed(seed):
 
 SEED = 595
 set_seed(SEED)
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device("cuda")# if torch.cuda.is_available() else torch.device("cpu")
 #device = torch.device("cpu")
 
 
