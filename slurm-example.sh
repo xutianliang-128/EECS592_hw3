@@ -9,9 +9,9 @@
 
 # set up job
 module load python cuda
-pushd /home/tianlix/EECS595/EECS592_hw3
+pushd /home/tianlix/EECS595
 source venv/bin/activate
 
 # run job
-python finetune.py
+python EECS592_hw3/finetune.py
 
