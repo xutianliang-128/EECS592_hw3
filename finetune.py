@@ -27,18 +27,20 @@ def load_data(tokenizer, params):
     #                   TODO: Implementation                      #
     # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
-    # def tokenize_function(examples):
-    #     question = [[context] * 4 for context in examples["question"]]
-    #     for i in range(len(examples["choices"])):
-    #         if len(examples["choices"][i]["text"]) != 4:
-    #             print(examples["choices"][i]["text"], len(examples["choices"][i]["text"]))
-    #
-    #     sol = [[examples["choices"][i]["text"][0], examples["choices"][i]["text"][1],
-    #             examples["choices"][i]["text"][2], examples["choices"][i]["text"][3]] for i in range(len(examples["choices"]))]
-    #     question = sum(question, [])
-    #     sol = sum(sol, [])
-    #     tokenized_examples = tokenizer(question, sol, truncation=True, padding=True, max_length=128)
-    #     return {k: [v[i:i + 4] for i in range(0, len(v), 2)] for k, v in tokenized_examples.items()}
+    def tokenize_function(examples):
+        question = [[context] * 4 for context in examples["question"]]
+        for i in range(len(examples["choices"])):
+            if len(examples["choices"][i]["text"]) != 4:
+                print(examples["choices"][i]["text"], len(examples["choices"][i]["text"]))
+
+        sol = [[examples["choices"][i]["text"][0], examples["choices"][i]["text"][1],
+                examples["choices"][i]["text"][2], examples["choices"][i]["text"][3]] for i in range(len(examples["choices"]))]
+        question = sum(question, [])
+        sol = sum(sol, [])
+        tokenized_examples = tokenizer(question, sol, truncation=True, padding="max_length", max_length=128)
+        out = {k: [v[i:i + 4] for i in range(0, len(v), 4)] for k, v in tokenized_examples.items()}
+        out["labels"] = [examples["choices"][i]["label"].index(examples["answerKey"][i]) for i in range(len(examples["choices"]))]
+        return out
 
     # def collate_fn(batch):
     #     #(labels, input_ids, token_type_ids, attention_mask) = zip(*batch)
@@ -64,33 +66,34 @@ def load_data(tokenizer, params):
     #     batch["labels"] = torch.tensor(labels, dtype=torch.int64)
     #     return batch
 
-    def tokenize_function(examples):
-        len_map = []
-        question = []
-        sol = []
-        for i in range(len(examples["choices"])):
-            length = len(examples["choices"][i]["text"])
-            len_map.append(length)
-            question.extend([examples["question"][i]] * length)
-            sol.extend([*examples["choices"][i]["text"]])
-
-        tokenized_examples = tokenizer(question, sol, truncation=True, padding='max_length', max_length=128)
-        out = {}
-        cnt = 0
-        out["labels"] = []
-        for k, v in tokenized_examples.items():
-            temp = []
-            for i in len_map:
-                temp.append(v[cnt: cnt + i])
-                cnt += i
-            out[k] = temp
-            cnt = 0
-        for i in range(len(len_map)):
-            out["labels"].append(examples["choices"][i]["label"].index(examples["answerKey"][i]))
-        return out
+    # def tokenize_function(examples):
+    #     len_map = []
+    #     question = []
+    #     sol = []
+    #     for i in range(len(examples["choices"])):
+    #         length = len(examples["choices"][i]["text"])
+    #         len_map.append(length)
+    #         question.extend([examples["question"][i]] * length)
+    #         sol.extend([*examples["choices"][i]["text"]])
+    #
+    #     tokenized_examples = tokenizer(question, sol, truncation=True, padding='max_length', max_length=128)
+    #     out = {}
+    #     cnt = 0
+    #     out["labels"] = []
+    #     for k, v in tokenized_examples.items():
+    #         temp = []
+    #         for i in len_map:
+    #             temp.append(v[cnt: cnt + i])
+    #             cnt += i
+    #         out[k] = temp
+    #         cnt = 0
+    #     for i in range(len(len_map)):
+    #         out["labels"].append(examples["choices"][i]["label"].index(examples["answerKey"][i]))
+    #     return out
 
 
     dataset = load_dataset(params.dataset, 'ARC-Challenge')
+    dataset = dataset.filter(lambda example: len(example["choices"]["text"]) == 4)
     tokenized_datasets = dataset.map(tokenize_function, batched=True)
 
     tokenized_datasets = tokenized_datasets.remove_columns(['question', 'choices', "answerKey", "id"])
