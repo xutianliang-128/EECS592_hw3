@@ -17,8 +17,8 @@ def set_seed(seed):
 
 SEED = 596
 set_seed(SEED)
-#device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
-device = torch.device("cpu")
+device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+#device = torch.device("cpu")
 
 
 def load_data(tokenizer, params):
