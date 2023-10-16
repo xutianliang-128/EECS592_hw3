@@ -13,5 +13,5 @@ pushd /home/tianlix/EECS595
 source venv/bin/activate
 
 # run job
-python sentiment-analysis.py
+python finetune.py
 
