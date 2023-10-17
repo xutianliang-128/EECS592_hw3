@@ -128,7 +128,7 @@ def finetune(model, train_dataloader, eval_dataloader, params):
     num_epochs = params.num_epochs
     num_training_steps = num_epochs * len(train_dataloader)
 
-    optimizer = AdamW(model.parameters(), lr=1e-4)
+    optimizer = AdamW(model.parameters(), lr=params.lr)
     lr_scheduler = get_scheduler(
         name="linear",
         optimizer=optimizer,
@@ -178,6 +178,7 @@ def test(model, test_dataloader, prediction_save='predictions.torch', mode="test
 
     score = metric.compute()
     if mode == "test":
+        print()
         print('Test Accuracy:', score)
         torch.save(all_predictions, prediction_save)
     else:
@@ -205,6 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="bert-base-cased")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--num_epochs", type=int, default=1)
+    parser.add_argument("--lr", type=int, default=1e-4)
     parser.add_argument("--eval_epoch", type=int, default=1)
 
     params, unknown = parser.parse_known_args()

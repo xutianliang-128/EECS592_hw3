@@ -13,5 +13,14 @@ pushd /home/tianlix/EECS595
 source venv/bin/activate
 
 # run job
-python EECS592_hw3/finetune.py
+for bs in 16 32
+do
+    for lr in 1e-4 1e-3
+    do
+        for num_ep in 5 10
+        do
+            python EECS592_hw3/finetune.py --batch_size $bs --lr $lr --num_epochs $num_ep
+        done
+    done
+done
 
