@@ -160,8 +160,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--dataset", type=str, default="ai2_arc")
     parser.add_argument("--model", type=str, default="bert-base-cased")
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--num_epochs", type=int, default=1)
+    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--num_epochs", type=int, default=10)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--eval_epoch", type=int, default=1)
 
