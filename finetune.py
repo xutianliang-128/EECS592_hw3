@@ -42,55 +42,6 @@ def load_data(tokenizer, params):
         out["labels"] = [examples["choices"][i]["label"].index(examples["answerKey"][i]) for i in range(len(examples["choices"]))]
         return out
 
-    # def collate_fn(batch):
-    #     #(labels, input_ids, token_type_ids, attention_mask) = zip(*batch)
-    #     #print(labels, input_ids, token_type_ids, attention_mask)
-    #     accepted_keys = ["input_ids", "attention_mask", "label"]
-    #     features = [{k: v for k, v in batch[i].items() if k in accepted_keys} for i in range(len(batch))]
-    #     label = batch["label"]
-    #
-    #     return torch.tensor(input_ids, dtype=torch.long, device=device), \
-    #            torch.tensor(labels, dtype=torch.long, device=device)
-    #
-    # def collate_fn(features):
-    #     label_name = "label" if "label" in features[0].keys() else "labels"
-    #     labels = [feature.pop(label_name) for feature in features]
-    #     batch_size = len(features)
-    #     num_choices = len(features[0]["input_ids"])
-    #     flattened_features = [
-    #         [{k: v[i] for k, v in feature.items()} for i in range(num_choices)] for feature in features
-    #     ]
-    #     batch = sum(flattened_features, [])
-    #     print(batch[:2])
-    #     batch = {k: v.view(batch_size, num_choices, -1) for k, v in batch.items()}
-    #     batch["labels"] = torch.tensor(labels, dtype=torch.int64)
-    #     return batch
-
-    # def tokenize_function(examples):
-    #     len_map = []
-    #     question = []
-    #     sol = []
-    #     for i in range(len(examples["choices"])):
-    #         length = len(examples["choices"][i]["text"])
-    #         len_map.append(length)
-    #         question.extend([examples["question"][i]] * length)
-    #         sol.extend([*examples["choices"][i]["text"]])
-    #
-    #     tokenized_examples = tokenizer(question, sol, truncation=True, padding='max_length', max_length=128)
-    #     out = {}
-    #     cnt = 0
-    #     out["labels"] = []
-    #     for k, v in tokenized_examples.items():
-    #         temp = []
-    #         for i in len_map:
-    #             temp.append(v[cnt: cnt + i])
-    #             cnt += i
-    #         out[k] = temp
-    #         cnt = 0
-    #     for i in range(len(len_map)):
-    #         out["labels"].append(examples["choices"][i]["label"].index(examples["answerKey"][i]))
-    #     return out
-
 
     dataset = load_dataset(params.dataset, 'ARC-Challenge')
     dataset = dataset.filter(lambda example: len(example["choices"]["text"]) == 4)
@@ -139,7 +90,7 @@ def finetune(model, train_dataloader, eval_dataloader, params):
     for epoch in range(params.num_epochs):
         print("This is epoch: ", epoch + 1)
         model.train()
-        for i, batch in enumerate(tqdm(train_dataloader)):
+        for i, batch in enumerate(train_dataloader):
             batch = {key: val.to(device) for key, val in batch.items()}
 
             outputs = model(**batch)
@@ -149,9 +100,9 @@ def finetune(model, train_dataloader, eval_dataloader, params):
             optimizer.step()
             lr_scheduler.step()
             optimizer.zero_grad()
-        if (i + 1) % params.eval_epoch == 0:
-            score = test(model, eval_dataloader, mode="eval")
-            print("After the ", i + 1, " steps, the accuracy: ", score)
+        # if (i + 1) % params.eval_epoch == 0:
+        #     score = test(model, eval_dataloader, mode="eval")
+        #     print("After ", i + 1, " steps, the accuracy: ", score)
 
     # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = #
 
@@ -168,7 +119,7 @@ def test(model, test_dataloader, prediction_save='predictions.torch', mode="test
     model.eval()
     all_predictions = []
 
-    for i, batch in enumerate(tqdm(test_dataloader)):
+    for i, batch in enumerate(test_dataloader):
         batch = {key: val.to(device) for key, val in batch.items()}
         with torch.no_grad():
             outputs = model(**batch)
@@ -178,9 +129,10 @@ def test(model, test_dataloader, prediction_save='predictions.torch', mode="test
 
     score = metric.compute()
     if mode == "test":
-        print()
+        #print()
         print('Test Accuracy:', score)
         torch.save(all_predictions, prediction_save)
+        return score
     else:
         return score
 
@@ -196,7 +148,11 @@ def main(params):
     model.to(device)
     model = finetune(model, train_dataloader, eval_dataloader, params)
 
-    test(model, test_dataloader)
+    score = test(model, test_dataloader, prediction_save=f'predictions_{params.batch_size}_{params.lr}_{params.num_epochs}.torch')
+    print("#################################")
+    print(f"batch size: {params.batch_size}, lr: {params.lr}, number of epochs: {params.num_epochs}. Accuracy: {score}.")
+    print("#################################")
+    print()
 
 
 if __name__ == "__main__":
